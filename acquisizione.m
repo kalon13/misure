@@ -1,24 +1,19 @@
 function acquisizione(video, num_livelli_grigio, larghezza_fascia, livelli_vuoto)
-    soglia = 0.05;
-    buffer_size = 5;
-    counter_buffer = 1;
-    counter_buffer_get = 5;
-    start = 0;
+    soglia = 0.05; %valore preso dal grafico
+    buffer_size = 5; 
+    counter_buffer = 1; %pos buffer dove salvare l'immagine
+    counter_buffer_get = 5;%pos del buffer dove prelevare l'immaigne
+    start = 0; %controlla che i primi frame non rappresentino cartoni in passaggio
     
     trovato = 0;
     
-%     immagini = ['img/i01.png'; 'img/i02.png'; 'img/i03.png'; 'img/i04.png'; 'img/i05.png';
-%                 'img/i06.png'; 'img/i07.png'; 'img/i08.png'; 'img/i09.png'; 'img/i10.png';
-%                 'img/i11.png'; 'img/i12.png'; 'img/i13.png'; 'img/i14.png'; 'img/i15.png';
-%                 'img/i16.png'; 'img/i17.png'; 'img/i18.png'; 'img/i19.png';];
-%     num_frame = size(immagini, 1);
     canali = zeros(1, num_livelli_grigio);
 
     num_frame = 100;
     for i = 1:num_frame;
         % Acquisizione frame
-        %img_raw = imread(immagini(i, :));
         img_raw = read(video, i);
+        %salva img sul buffer
         buffer(counter_buffer, :, :, :) = img_raw;
         % Conversione in scala di grigi
         img_gray = rgb2gray(img_raw);
@@ -33,30 +28,29 @@ function acquisizione(video, num_livelli_grigio, larghezza_fascia, livelli_vuoto
         % Normalizzazione livelli
         norm_gray_level = gray_level / area;
         % Salvataggio livelli su array nel tempo
-        %canali(i,:) = norm_gray_level(:);
-        %canali(i,:) = abs(norm_gray_level - livelli_vuoto);
         scarto = sum(abs(norm_gray_level - livelli_vuoto)) / num_livelli_grigio;
         canali(i) = scarto;
         
-        if (scarto > soglia && trovato == 0) && start == 1
+        %se è presente il cartone e non sono ancora state acquisite
+        %immagini
+        if (scarto > soglia && trovato == 0) && start == 1 
+            %salvataggio delle immagini nel buffer
             img_buff = squeeze(buffer(counter_buffer_get, :, :, :));
+            %mostra immagini
             figure, imshow(img_buff);
             trovato = 1;
         end
-        
-        if scarto <= soglia && trovato == 1
+        %se non sta passando nulla
+        if scarto <= soglia 
             trovato = 0;
-        end
-        
-        if scarto <= soglia && start == 0
             start = 1;
         end
-        
+        %incrementa contatore buffer
         if counter_buffer == buffer_size
              counter_buffer = 0;
         end
         counter_buffer = counter_buffer + 1;
-        
+        %incrementa contatore buffer acqusizione img
         if counter_buffer_get == buffer_size
              counter_buffer_get = 0;
         end
