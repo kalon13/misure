@@ -1,12 +1,17 @@
 function acquisizione(video, num_livelli_grigio, larghezza_fascia, livelli_vuoto)
-    soglia = 0.05; %valore preso dal grafico
+    %% Dichiarazione variabili
+    soglia = 0.05;          % Valore preso dal grafico
     buffer_size = 5; 
-    counter_buffer = 1; %pos buffer dove salvare l'immagine
-    counter_buffer_get = 5;%pos del buffer dove prelevare l'immaigne
-    start = 0; %controlla che i primi frame non rappresentino cartoni in passaggio
+    counter_buffer = 1;     % pos buffer dove salvare l'immagine
+    counter_buffer_get = 5; % pos del buffer dove prelevare l'immaigne
+    start = 0;              % controlla che i primi frame non rappresentino cartoni in passaggio
     
+    w = 1024; h = 768;              % Dimensioni video
+    area = h * larghezza_fascia;	% Calcola area della fascia
+    
+    %% Inizializzazione buffer e variabili
     trovato = 0;
-    
+    buffer = zeros(counter_buffer, h, w, 3);
     canali = zeros(1, num_livelli_grigio);
 
     num_frame = 100;
@@ -16,11 +21,7 @@ function acquisizione(video, num_livelli_grigio, larghezza_fascia, livelli_vuoto
         %salva img sul buffer
         buffer(counter_buffer, :, :, :) = img_raw;
         % Conversione in scala di grigi
-        img_gray = rgb2gray(img_raw);
-        % Calcola dimensioni immagine
-        [h, w] = size(img_gray);
-        % Calcola area della fascia
-        area = h * larghezza_fascia;
+        img_gray = rgb2gray(img_raw);        
         % Estrai fascia dall'immagine
         fascia = img_gray(:, w - larghezza_fascia + 1:w);
         % Estrai livelli di grigio
@@ -31,10 +32,9 @@ function acquisizione(video, num_livelli_grigio, larghezza_fascia, livelli_vuoto
         scarto = sum(abs(norm_gray_level - livelli_vuoto)) / num_livelli_grigio;
         canali(i) = scarto;
         
-        %se è presente il cartone e non sono ancora state acquisite
-        %immagini
+        %se è presente il cartone e non sono ancora state acquisite immagini
         if (scarto > soglia && trovato == 0) && start == 1 
-            %salvataggio delle immagini nel buffer
+            %estrazione delle immagini nel buffer
             img_buff = squeeze(buffer(counter_buffer_get, :, :, :));
             %mostra immagini
             figure, imshow(img_buff);
@@ -45,6 +45,7 @@ function acquisizione(video, num_livelli_grigio, larghezza_fascia, livelli_vuoto
             trovato = 0;
             start = 1;
         end
+        %% Incrementa contatori
         %incrementa contatore buffer
         if counter_buffer == buffer_size
              counter_buffer = 0;

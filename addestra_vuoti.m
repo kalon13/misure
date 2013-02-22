@@ -1,6 +1,6 @@
-function [ livelli_vuoto ] = addestra_vuoti( video, num_livelli_grigio, larghezza_fascia, start, fine )
-%ADDESTRA_VUOTI Summary of this function goes here
-%   Detailed explanation goes here
+function [ livelli_vuoto ] = addestra_vuoti(video, num_livelli_grigio, larghezza_fascia)
+    start = 40;
+    fine = 50;
 
     livelli_vuoto = zeros(num_livelli_grigio, 1);
 
@@ -14,7 +14,7 @@ function [ livelli_vuoto ] = addestra_vuoti( video, num_livelli_grigio, larghezz
         % Calcola area della fascia
         area = h * larghezza_fascia;
         % Estrai fascia dall'immagine
-        fascia = img_gray(:, w-larghezza_fascia+1:w);
+        fascia = img_gray(:, w - larghezza_fascia + 1:w);
         % Estrai livelli di grigio
         gray_level = imhist(fascia, num_livelli_grigio);
         % Normalizzazione livelli
@@ -24,5 +24,6 @@ function [ livelli_vuoto ] = addestra_vuoti( video, num_livelli_grigio, larghezz
     end
 
     livelli_vuoto = livelli_vuoto / (fine - start + 1);
+    figure, livelli_vuoto;
 end
 
