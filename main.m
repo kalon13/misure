@@ -17,7 +17,3 @@ end
 
 %% Acquisizione
 acquisizione(video, num_livelli_grigio, larghezza_fascia, livelli_vuoto);
-%acquisizione(video, num_livelli_grigio, larghezza_fascia);
-% processamento()
-% confronto()
-% output()

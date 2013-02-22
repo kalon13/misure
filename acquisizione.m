@@ -11,7 +11,7 @@ function acquisizione(video, num_livelli_grigio, larghezza_fascia, livelli_vuoto
     
     %% Inizializzazione buffer e variabili
     trovato = 0;
-    buffer = zeros(counter_buffer, h, w, 3);
+    %buffer = zeros(buffer_size, h, w, 3);
     canali = zeros(1, num_livelli_grigio);
 
     num_frame = 100;
@@ -29,17 +29,22 @@ function acquisizione(video, num_livelli_grigio, larghezza_fascia, livelli_vuoto
         % Normalizzazione livelli
         norm_gray_level = gray_level / area;
         % Salvataggio livelli su array nel tempo
+        livelli(i, :) = norm_gray_level(:);
         scarto = sum(abs(norm_gray_level - livelli_vuoto)) / num_livelli_grigio;
         canali(i) = scarto;
         
-        %se è presente il cartone e non sono ancora state acquisite immagini
+        % Se è presente il cartone e non sono ancora state acquisite immagini
         if (scarto > soglia && trovato == 0) && start == 1 
-            %estrazione delle immagini nel buffer
-            img_buff = squeeze(buffer(counter_buffer_get, :, :, :));
-            %mostra immagini
-            figure, imshow(img_buff);
+            % Estrazione delle immagini nel buffer
             trovato = 1;
+            img_buff = squeeze(buffer(counter_buffer_get, :, :, :));
+            % Mostra immagini
+            figure, imshow(img_buff);
+            %% processamento()
+            %% confronto()
+            %% output()
         end
+        
         %se non sta passando nulla
         if scarto <= soglia 
             trovato = 0;
@@ -58,6 +63,7 @@ function acquisizione(video, num_livelli_grigio, larghezza_fascia, livelli_vuoto
         counter_buffer_get = counter_buffer_get + 1;
     end
     % Visualizza i livelli di grigio nel tempo
+    figure, plot(livelli);
     figure, plot(canali);
     
 end
