@@ -1,74 +1,79 @@
 function acquisizione(video, num_livelli_grigio, larghezza_fascia, livelli_vuoto)
-    %% Dichiarazione variabili
-    soglia = 0.05;          % Valore preso dal grafico
-    buffer_size = 5; 
-    counter_buffer = 1;     % pos buffer dove salvare l'immagine
-    counter_buffer_get = 5; % pos del buffer dove prelevare l'immaigne
-    start = 0;              % controlla che i primi frame non rappresentino cartoni in passaggio
-    
-    w = 1024; h = 768;              % Dimensioni video
-    area = h * larghezza_fascia;	% Calcola area della fascia
-    
-    %% Inizializzazione buffer e variabili
+    %% Inizializzazione parametri
+    soglia = 0.25;          % Valore preso dal grafico
+    buffer_size = 5;        % Grandezza del buffer di immagini
+    counter_buffer = 1;     % Posizione buffer dove salvare l'immagine
+    counter_buffer_get = 5; % Posizione del buffer dove prelevare l'immagine
+    start = 0;              % Controlla che i primi frame non rappresentino cartoni in passaggio
     trovato = 0;
+    
+    w = 1024;
+    h = 768;
+    area = h * larghezza_fascia;
+    
     %buffer = zeros(buffer_size, h, w, 3);
-    canali = zeros(1, num_livelli_grigio);
-
+    scarti = zeros(1, num_livelli_grigio);
+    
+    %% Ciclo di acquisizione
     num_frame = 100;
     for i = 1:num_frame;
         % Acquisizione frame
         img_raw = read(video, i);
-        %salva img sul buffer
+        % Salva img sul buffer
         buffer(counter_buffer, :, :, :) = img_raw;
         % Conversione in scala di grigi
         img_gray = rgb2gray(img_raw);        
         % Estrai fascia dall'immagine
-        fascia = img_gray(:, w - larghezza_fascia + 1:w);
+        fascia = img_gray(:, w-larghezza_fascia+1:w);
         % Estrai livelli di grigio
         gray_level = imhist(fascia, num_livelli_grigio);
         % Normalizzazione livelli
         norm_gray_level = gray_level / area;
         % Salvataggio livelli su array nel tempo
         livelli(i, :) = norm_gray_level(:);
-        scarto = sum(abs(norm_gray_level - livelli_vuoto)) / num_livelli_grigio;
-        canali(i) = scarto;
+        %scarto = sum(abs(norm_gray_level - livelli_vuoto)) / num_livelli_grigio;
+        scarto_mq = sqrt(sum((norm_gray_level - livelli_vuoto).^2));
+        scarti(i) = scarto_mq;
         
         % Se è presente il cartone e non sono ancora state acquisite immagini
-        if (scarto > soglia && trovato == 0) && start == 1 
+        if (scarto_mq > soglia && trovato == 0) && start == 1 
             % Estrazione delle immagini nel buffer
             trovato = 1;
-            img_buff = squeeze(buffer(counter_buffer_get, :, :, :));
+            img_cartone = squeeze(buffer(counter_buffer_get, :, :, :));
             % Mostra immagini
-            figure, imshow(img_buff);
+            figure('Name', ['Frame ' int2str(i)]), imshow(img_cartone);
             %% processamento()
             %% confronto()
             %% output()
         end
         
-        %se non sta passando nulla
-        if scarto <= soglia 
+        % Se non sta passando nulla azzero le variabili
+        if scarto_mq <= soglia 
             trovato = 0;
             start = 1;
         end
+        
         %% Incrementa contatori
-        %incrementa contatore buffer
+        % Incrementa contatore buffer
         if counter_buffer == buffer_size
              counter_buffer = 0;
         end
         counter_buffer = counter_buffer + 1;
-        %incrementa contatore buffer acqusizione img
+        
+        % Incrementa contatore buffer acqusizione img
         if counter_buffer_get == buffer_size
              counter_buffer_get = 0;
         end
         counter_buffer_get = counter_buffer_get + 1;
     end
-    % Visualizza i livelli di grigio nel tempo
-    figure, plot(livelli);
-    figure, plot(canali);
     
+    %% Plottaggio livelli
+    figure('Name', 'Livelli di grigio'), plot(livelli);
+    title('Andamento livelli di grigio');
+    xlabel('Frame');
+    ylabel('Valore')
+    figure('Name', 'Scarto'), plot(scarti);
+    title('Andamento scarto medio quadratico');
+    xlabel('Frame');
+    ylabel('Valore')
 end
-% Algoritmi da valutare:
-% KMeans
-% KDE
-% PCA
-% NN
